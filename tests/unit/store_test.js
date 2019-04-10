@@ -4,6 +4,8 @@ import { setupApplicationTest } from 'ember-qunit';
 import Name from 'dummy/models/name';
 import JSONAPISerializer from 'ember-data/serializers/json-api';
 import JSONSerializer from 'ember-data/serializers/json';
+import Pretender from 'pretender';
+
 let store, owner;
 
 module('unit - `DS.Store`', function(hooks) {
@@ -88,6 +90,52 @@ module('unit - `DS.Store`', function(hooks) {
       schedule('destroy', () => {
         assert.ok(person.get('isDestroying'), 'the model is being destroyed');
         assert.ok(name.get('isDestroying'), 'the fragment is being destroyed');
+      });
+    });
+  });
+
+  test('A nested embedded record is not dirty after saving', function(assert) {
+    run(() => {
+      assert.expect(4);
+      let done = assert.async();
+      let server = new Pretender();
+      let grandparentPayload = {
+        id: 5,
+        children: [
+          // parent model
+          {
+            id: 3,
+            children: [
+              // child model
+              {
+                id: 2,
+                // toy fragment
+                toy: {
+                  // part fragmentArray
+                  // parts: [{ name: 'heart' }]
+                  parts: [{ name: 'batteries' }, { name: 'eyes' }]
+                }
+              }
+            ]
+          }
+        ]
+      };
+      store.pushPayload({
+        grandparents: [grandparentPayload]
+      });
+      let grandparent = store.peekRecord('grandparent', 5);
+      let toy = grandparent.children.firstObject.children.firstObject.toy;
+
+      grandparentPayload.children[0].children[0].toy.parts = [{ name: 'heart'}];
+      server.put('/grandparents/5', () => {
+        return [200, { 'Content-Type': 'application/json' }, JSON.stringify(grandparentPayload)];
+      });
+      assert.notOk(toy.hasDirtyAttributes, 'toy is not initially dirty');
+      toy.set('parts', [{ name: 'heart' }]);
+      assert.ok(toy.hasDirtyAttributes, 'toy is dirty after a set');
+      grandparent.save().then(() => {
+        assert.notOk(toy.hasDirtyAttributes, 'toy is not dirty after a save');
+        done();
       });
     });
   });
