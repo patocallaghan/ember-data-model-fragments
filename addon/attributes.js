@@ -295,9 +295,14 @@ function fragmentArrayProperty(metaType, options, createArray) {
       fragments = data;
     // Create a fragment array and initialize with data
     } else if (data && data !== fragments) {
-      fragments || (fragments = createArray(record, key));
-      internalModel._recordData._data[key] = fragments;
-      fragments.setupData(data);
+      if (fragments) {
+        internalModel._recordData._data[key] = fragments;
+        fragments.setupData(data);
+      } else {
+        fragments = createArray(record, key);
+        internalModel._recordData._data[key] = fragments;
+        fragments.initData(data);
+      }
     } else {
       // Handle the adapter setting the fragment array to null
       fragments = data;

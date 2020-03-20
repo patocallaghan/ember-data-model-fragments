@@ -1,6 +1,7 @@
 import { assert } from '@ember/debug';
 import { typeOf } from '@ember/utils';
-import { get, setProperties, computed } from '@ember/object';
+import { get, set, setProperties, computed } from '@ember/object';
+import { A } from '@ember/array';
 import StatefulArray from './stateful';
 import {
   internalModelFor,
@@ -138,6 +139,12 @@ const FragmentArray = StatefulArray.extend({
     this.forEach(fragment => {
       fragment._adapterDidError(error);
     });
+  },
+
+  initData(data) {
+    let processedData = normalizeFragmentArray(this, [], data, true);
+    set(this, 'content', A(processedData));
+    set(this, '_originalState', processedData.slice(0));
   },
 
   /**
