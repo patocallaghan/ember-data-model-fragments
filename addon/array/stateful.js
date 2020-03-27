@@ -81,6 +81,10 @@ const StatefulArray = ArrayProxy.extend(Copyable, {
     this._pendingData = undefined;
   },
 
+  initData(data) {
+    this.setupData(data);
+  },
+
   /**
     @method _normalizeData
     @private
