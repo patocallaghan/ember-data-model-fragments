@@ -4,6 +4,7 @@ import { Copyable } from 'ember-copy';
 import Ember from 'ember';
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
+import { make, setupFactoryGuy } from 'ember-data-factory-guy';
 
 let store;
 
@@ -305,6 +306,28 @@ module('unit - `MF.Fragment`', function(hooks) {
 
       assert.ok(person.get('name.readyWasCalled'), 'when creating model that has fragment');
       assert.ok(person.get('names').isEvery('readyWasCalled'), 'when creating model that has fragmentArray');
+    });
+  });
+
+  module('with Factory Guy', function(hooks) {
+    setupFactoryGuy(hooks);
+
+    test('passing a fragment to a model with FactoryGuy#make works', function(assert) {
+      let info = make('info');
+      let user = make('user', { info });
+      assert.equal(user.info.name, 'Jon Snow');
+    });
+
+    test('passing a model to another model with FactoryGuy#make works', function(assert) {
+      let manager = make('person');
+      let zoo = make('zoo', { manager });
+      assert.equal(zoo.manager.get('nickName'), 'The White Wolf');
+    });
+
+    test('passing a fragment to another fragment with FactoryGuy#make works', function(assert) {
+      let product = make('product');
+      let order = make('order', { product });
+      assert.equal(order.product.name, 'Needle');
     });
   });
 });
