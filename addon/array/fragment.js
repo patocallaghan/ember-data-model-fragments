@@ -81,6 +81,8 @@ const FragmentArray = StatefulArray.extend({
 
   options: null,
 
+  _isFragmentArray: true,
+
   /**
     @method _normalizeData
     @private
